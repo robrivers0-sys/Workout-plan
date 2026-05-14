@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="My Workout" />
+  <title>11-Week Workout Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #080810;
+      color: #E0E0EE;
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overscroll-behavior: none;
+    }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: #080810; }
+    ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+    button { font-family: 'DM Sans', sans-serif; border: none; cursor: pointer; }
+    .barlow { font-family: 'Barlow Condensed', sans-serif; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .fade-in { animation: fadeIn 0.25s ease forwards; }
+
+    /* Header gradient line */
+    .header-line {
+      height: 2px;
+      background: linear-gradient(90deg, #00E5A0, #00BFFF, #FF6B35, transparent);
+    }
+
+    /* Phase buttons */
+    .phase-btn {
+      transition: border-color 0.2s, background 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Day cards */
+    .day-card {
+      transition: border-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Tab buttons */
+    .tab-btn {
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.15s;
+    }
+
+    /* Safe area for iPhone notch / home indicator */
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 16px); }
+    .safe-top { padding-top: env(safe-area-inset-top, 0px); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+const PLAN = {
+  phases: [
+    {
+      id: 1, label: "Phase 1", subtitle: "Foundation", weeks: "Weeks 1–4",
+      badge: "Physio Mon & Wed", color: "#00E5A0",
+      description: "Build movement patterns, establish running habit, begin pull-up base, and lock in core discipline.",
+      days: [
+        {
+          day: "Monday", tag: "Legs + Core", icon: "🦵", physio: true,
+          blocks: [
+            { title: "Physio (10 min)", type: "physio", exercises: [
+              { name: "Complete prescribed physio routine", sets: "", reps: "10 min", note: "" }
+            ]},
+            { title: "Legs", type: "strength", exercises: [
+              { name: "Goblet Squat", sets: "3", reps: "12", note: "Light-moderate weight, focus on depth" },
+              { name: "Romanian Deadlift", sets: "3", reps: "10", note: "Hinge at hips, feel the hamstrings" },
+              { name: "Walking Lunges", sets: "3", reps: "10 each", note: "Bodyweight or light DBs" },
+              { name: "Leg Press", sets: "3", reps: "12", note: "3 sec down, controlled tempo" },
+            ]},
+            { title: "Core Finisher — Lower Abs & Stability", type: "core", exercises: [
+              { name: "Plank", sets: "3", reps: "45 sec", note: "Build to 90 sec over 4 weeks" },
+              { name: "Lying Leg Raise", sets: "3", reps: "12", note: "Directly targets lower abs" },
+              { name: "Dead Bug", sets: "3", reps: "10 each side", note: "Deep core — foundation of a strong midsection" },
+              { name: "Reverse Crunch", sets: "3", reps: "15", note: "Curls pelvis up, hits lower abs" },
+              { name: "Side Plank", sets: "2", reps: "30 sec each side", note: "Oblique strength and lateral stability" },
+            ]}
+          ]
+        },
+        {
+          day: "Tuesday", tag: "Easy Run", icon: "🏃",
+          blocks: [{ title: "Easy Run — 30 min", type: "run", exercises: [
+            { name: "Easy conversational pace", sets: "", reps: "30 min", note: "Speak in full sentences throughout. Builds aerobic base — do NOT push the pace." }
+          ]}]
+        },
+        {
+          day: "Wednesday", tag: "Back + Pull-Ups", icon: "🔝", physio: true,
+          blocks: [
+            { title: "Physio (10 min)", type: "physio", exercises: [
+              { name: "Complete prescribed physio routine", sets: "", reps: "10 min", note: "" }
+            ]},
+            { title: "Back & Pull-Up Progression", type: "strength", exercises: [
+              { name: "Negative Pull-Ups", sets: "4", reps: "4–5", note: "Jump to bar, lower over 5 seconds" },
+              { name: "Lat Pulldown", sets: "3", reps: "10", note: "Wide grip — mimic pull-up mechanics" },
+              { name: "Seated Cable Row", sets: "3", reps: "10", note: "Drive elbows back, squeeze at end" },
+              { name: "Single-Arm DB Row", sets: "3", reps: "10 each", note: "Brace on bench, keep back flat" },
+              { name: "Face Pull", sets: "3", reps: "15", note: "External rotation — great for posture" },
+            ]},
+            { title: "Core Finisher — Hanging & Functional", type: "core", exercises: [
+              { name: "Hanging Knee Raise", sets: "3", reps: "12", note: "Progress to straight leg over time" },
+              { name: "Hanging Leg Raise (straight)", sets: "3", reps: "8–10", note: "Full lower ab stretch and contraction" },
+              { name: "Ab Wheel Rollout", sets: "3", reps: "8", note: "From knees — build to 12. One of the best core exercises." },
+              { name: "Cable Crunch", sets: "3", reps: "15", note: "Weighted — builds actual ab muscle mass" },
+              { name: "Hollow Body Hold", sets: "3", reps: "20–30 sec", note: "Back flat, extreme tension through midline" },
+            ]}
+          ]
+        },
+        {
+          day: "Thursday", tag: "Tempo Run", icon: "⚡",
+          blocks: [{ title: "Tempo Intervals — 30 min", type: "run", exercises: [
+            { name: "Warm-up", sets: "", reps: "5 min", note: "Easy jog" },
+            { name: "Tempo Intervals", sets: "4", reps: "4 min each", note: "Comfortably hard — few words, no full sentences. 2 min easy jog between." },
+            { name: "Cool-down", sets: "", reps: "5 min", note: "Easy jog" },
+          ]}]
+        },
+        {
+          day: "Friday", tag: "Full Body", icon: "💪",
+          blocks: [
+            { title: "Full Body Strength", type: "strength", exercises: [
+              { name: "Incline DB Chest Press", sets: "3", reps: "10", note: "Controlled press" },
+              { name: "DB Shoulder Press", sets: "3", reps: "10", note: "Don't arch lower back" },
+              { name: "Cable Chest Fly", sets: "3", reps: "12", note: "Squeeze at centre" },
+              { name: "Bicep Curl", sets: "3", reps: "12", note: "Full range of motion" },
+              { name: "Tricep Pushdown", sets: "3", reps: "12", note: "Elbows tucked in" },
+            ]},
+            { title: "Core Finisher — Upper Abs & Obliques", type: "core", exercises: [
+              { name: "Weighted Crunch", sets: "3", reps: "15", note: "Plate on chest — adds resistance for muscle growth" },
+              { name: "Bicycle Crunch", sets: "3", reps: "20 (10 each)", note: "#1 oblique exercise in EMG studies" },
+              { name: "Russian Twist", sets: "3", reps: "20 (10 each)", note: "Rotational oblique strength — tapered waist" },
+              { name: "Mountain Climbers", sets: "3", reps: "30 sec", note: "Dynamic core + cardio" },
+              { name: "Plank to Downward Dog", sets: "3", reps: "10 reps", note: "Deep core to spinal decompression" },
+            ]}
+          ]
+        },
+        {
+          day: "Saturday", tag: "Long Run", icon: "🏅",
+          blocks: [{ title: "Long Run", type: "run", exercises: [
+            { name: "Week 1–2: Easy long run", sets: "", reps: "40 min", note: "Most important run of the week. Never skip." },
+            { name: "Week 3–4: Easy long run", sets: "", reps: "50 min", note: "Same easy pace — just more time on feet." },
+          ]}]
+        },
+        {
+          day: "Sunday", tag: "Rest", icon: "😴",
+          blocks: [{ title: "Rest / Active Recovery", type: "rest", exercises: [
+            { name: "Full rest, gentle walk or light stretching", sets: "", reps: "", note: "Sleep 7–9 hrs. This is when you get stronger." }
+          ]}]
+        }
+      ]
+    },
+    {
+      id: 2, label: "Phase 2", subtitle: "Build", weeks: "Weeks 5–8",
+      badge: "No Physio", color: "#FF6B35",
+      description: "Increase weights, run volume, and pull-up difficulty. Core exercises get harder. Running gets longer.",
+      days: [
+        {
+          day: "Monday", tag: "Legs + Core", icon: "🦵",
+          blocks: [
+            { title: "Legs — Upgraded", type: "strength", exercises: [
+              { name: "Barbell Back Squat", sets: "4", reps: "8", note: "Replaces Goblet Squat — progressive load" },
+              { name: "Romanian Deadlift", sets: "3", reps: "10", note: "Add weight vs Phase 1" },
+              { name: "Nordic Hamstring Curl", sets: "3", reps: "6", note: "Crucial for runner injury prevention" },
+              { name: "Walking Lunges", sets: "3", reps: "12 each", note: "Add DBs" },
+              { name: "Leg Press", sets: "3", reps: "12", note: "Increase weight" },
+            ]},
+            { title: "Core Finisher — Lower Abs (Progressed)", type: "core", exercises: [
+              { name: "Plank", sets: "3", reps: "75 sec", note: "Hold strong, no sagging" },
+              { name: "Lying Leg Raise", sets: "3", reps: "15", note: "Fully straight legs" },
+              { name: "Dead Bug", sets: "3", reps: "12 each side", note: "Slower tempo" },
+              { name: "Reverse Crunch", sets: "3", reps: "15", note: "Add a slight incline" },
+              { name: "Side Plank with Hip Dip", sets: "3", reps: "12 dips each", note: "Adds dynamic oblique load" },
+            ]}
+          ]
+        },
+        {
+          day: "Tuesday", tag: "Easy Run", icon: "🏃",
+          blocks: [{ title: "Easy Run — 35–40 min", type: "run", exercises: [
+            { name: "Easy conversational pace", sets: "", reps: "35–40 min", note: "Slightly longer than Phase 1." }
+          ]}]
+        },
+        {
+          day: "Wednesday", tag: "Back + Pull-Ups", icon: "🔝",
+          blocks: [
+            { title: "Back & Pull-Up Progression — Upgraded", type: "strength", exercises: [
+              { name: "Deadlift", sets: "3", reps: "6", note: "New addition — moderate weight, perfect form" },
+              { name: "Band-Assisted Pull-Ups", sets: "3–4", reps: "5–6", note: "Replaces negatives. Lighter band each week." },
+              { name: "Lat Pulldown", sets: "3", reps: "10", note: "Increase weight" },
+              { name: "Seated Cable Row", sets: "3", reps: "10", note: "Increase weight" },
+              { name: "Single-Arm DB Row", sets: "3", reps: "10 each", note: "Heavier DB" },
+              { name: "Face Pull", sets: "3", reps: "15", note: "" },
+            ]},
+            { title: "Core Finisher — Hanging & Functional (Progressed)", type: "core", exercises: [
+              { name: "Hanging Straight Leg Raise", sets: "3", reps: "12", note: "Full extension — serious lower ab work" },
+              { name: "Ab Wheel Rollout (standing)", sets: "3", reps: "8", note: "Feet on floor now — massive step up" },
+              { name: "Cable Crunch (heavier)", sets: "3", reps: "12", note: "Progressive overload on abs" },
+              { name: "Hollow Body Hold", sets: "3", reps: "30 sec", note: "" },
+              { name: "Toes to Bar", sets: "3", reps: "8", note: "Targets entire anterior chain" },
+            ]}
+          ]
+        },
+        {
+          day: "Thursday", tag: "Tempo Run", icon: "⚡",
+          blocks: [{ title: "Tempo Run — Upgraded", type: "run", exercises: [
+            { name: "Warm-up", sets: "", reps: "5 min", note: "Easy jog" },
+            { name: "Tempo Intervals", sets: "5", reps: "5 min each", note: "Up from 4×4 to 5×5. 90 sec easy between." },
+            { name: "Cool-down", sets: "", reps: "5 min", note: "Easy jog" },
+          ]}]
+        },
+        {
+          day: "Friday", tag: "Full Body", icon: "💪",
+          blocks: [
+            { title: "Full Body Strength — Upgraded", type: "strength", exercises: [
+              { name: "Incline DB Chest Press", sets: "4", reps: "10", note: "Extra set added" },
+              { name: "DB Shoulder Press", sets: "3", reps: "10", note: "Increase weight" },
+              { name: "Cable Chest Fly", sets: "3", reps: "12", note: "" },
+              { name: "Bicep Curl", sets: "3", reps: "12", note: "Increase weight" },
+              { name: "Tricep Pushdown", sets: "3", reps: "12", note: "Increase weight" },
+            ]},
+            { title: "Core Finisher — Upper Abs & Obliques (Progressed)", type: "core", exercises: [
+              { name: "Weighted Crunch", sets: "3", reps: "15", note: "Heavier plate" },
+              { name: "Bicycle Crunch", sets: "3", reps: "30 (15 each)", note: "More volume" },
+              { name: "Russian Twist (weighted)", sets: "3", reps: "20", note: "Hold a plate or medicine ball" },
+              { name: "Mountain Climbers", sets: "3", reps: "45 sec", note: "Faster pace" },
+              { name: "Plank to Downward Dog", sets: "3", reps: "12 reps", note: "" },
+            ]}
+          ]
+        },
+        {
+          day: "Saturday", tag: "Long Run", icon: "🏅",
+          blocks: [{ title: "Long Run — Upgraded", type: "run", exercises: [
+            { name: "Week 5–6: Easy long run", sets: "", reps: "60 min", note: "Biggest jump in run volume. Fully easy pace." },
+            { name: "Week 7–8: Easy long run", sets: "", reps: "75 min", note: "Peak long run for this phase." },
+          ]}]
+        },
+        {
+          day: "Sunday", tag: "Rest", icon: "😴",
+          blocks: [{ title: "Rest / Active Recovery", type: "rest", exercises: [
+            { name: "Full rest, gentle walk or light stretching", sets: "", reps: "", note: "Sleep 7–9 hrs." }
+          ]}]
+        }
+      ]
+    },
+    {
+      id: 3, label: "Phase 3", subtitle: "Peak", weeks: "Weeks 9–11",
+      badge: "Final Push 🏁", color: "#FF2D55",
+      description: "Everything comes together. Race-specific running, unassisted pull-ups, and peak core intensity including the Dragon Flag.",
+      days: [
+        {
+          day: "Monday", tag: "Legs + Core", icon: "🦵",
+          blocks: [
+            { title: "Legs — Peak", type: "strength", exercises: [
+              { name: "Barbell Back Squat", sets: "4", reps: "6", note: "Heavier, lower reps" },
+              { name: "Romanian Deadlift", sets: "4", reps: "8", note: "Peak weight" },
+              { name: "Nordic Hamstring Curl", sets: "3", reps: "8", note: "" },
+              { name: "Bulgarian Split Squat", sets: "3", reps: "8 each", note: "Replaces lunges — brutal unilateral strength" },
+              { name: "Leg Press", sets: "3", reps: "10", note: "Maximum weight" },
+            ]},
+            { title: "Core Finisher — Peak Intensity", type: "core", exercises: [
+              { name: "Plank", sets: "3", reps: "90 sec", note: "Target duration" },
+              { name: "Hanging Straight Leg Raise", sets: "3", reps: "15", note: "" },
+              { name: "Dragon Flag (Negative) 🐉", sets: "3", reps: "5", note: "Bruce Lee's move. Lie on bench, grip behind head, lower rigid body slowly." },
+              { name: "Reverse Crunch", sets: "3", reps: "20", note: "" },
+              { name: "Side Plank", sets: "3", reps: "45 sec each", note: "" },
+            ]}
+          ]
+        },
+        {
+          day: "Tuesday", tag: "Easy Run", icon: "🏃",
+          blocks: [{ title: "Easy Run — 40 min", type: "run", exercises: [
+            { name: "Easy conversational pace", sets: "", reps: "40 min", note: "Keep it genuinely easy — hard runs are Thu & Sat." }
+          ]}]
+        },
+        {
+          day: "Wednesday", tag: "Back + Pull-Ups", icon: "🔝",
+          blocks: [
+            { title: "Back & Pull-Up Progression — Peak", type: "strength", exercises: [
+              { name: "Deadlift", sets: "4", reps: "5", note: "Heavy — peak strength" },
+              { name: "Unassisted Pull-Ups", sets: "4–5", reps: "Max reps", note: "No band. Start 2–3, build to 10 by Week 11." },
+              { name: "Lat Pulldown", sets: "3", reps: "8", note: "Supplement pull-ups" },
+              { name: "Seated Cable Row", sets: "3", reps: "10", note: "Heavy" },
+              { name: "Face Pull", sets: "3", reps: "15", note: "" },
+            ]},
+            { title: "Core Finisher — Peak Hanging Core", type: "core", exercises: [
+              { name: "Toes to Bar", sets: "4", reps: "10", note: "Full range — toes touch bar each rep" },
+              { name: "Ab Wheel Rollout (standing)", sets: "3", reps: "10–12", note: "Full extension" },
+              { name: "Cable Crunch (heavy)", sets: "3", reps: "12", note: "Maximum load for muscle growth" },
+              { name: "Hollow Body Hold", sets: "3", reps: "40 sec", note: "" },
+              { name: "L-Sit Hold (dip bars)", sets: "3", reps: "15–20 sec", note: "Extreme core compression" },
+            ]}
+          ]
+        },
+        {
+          day: "Thursday", tag: "Race Pace Run", icon: "⚡",
+          blocks: [{ title: "Race Pace Intervals", type: "run", exercises: [
+            { name: "Warm-up", sets: "", reps: "5 min", note: "Easy jog" },
+            { name: "Race Pace Intervals", sets: "3", reps: "10 min each", note: "Target half marathon pace ~5:40/km. 2 min easy between." },
+            { name: "Cool-down", sets: "", reps: "5 min", note: "Easy jog" },
+          ]}]
+        },
+        {
+          day: "Friday", tag: "Full Body", icon: "💪",
+          blocks: [
+            { title: "Full Body Strength — Peak", type: "strength", exercises: [
+              { name: "Incline DB Chest Press", sets: "3", reps: "10", note: "Week 11: reduce to 2 sets (taper)" },
+              { name: "DB Shoulder Press", sets: "3", reps: "10", note: "" },
+              { name: "Cable Chest Fly", sets: "3", reps: "12", note: "" },
+              { name: "Bicep Curl", sets: "3", reps: "12", note: "" },
+              { name: "Tricep Pushdown", sets: "3", reps: "12", note: "" },
+            ]},
+            { title: "Core Finisher — Upper Abs & Obliques (Peak)", type: "core", exercises: [
+              { name: "Weighted Crunch", sets: "3", reps: "15", note: "Heaviest weight yet" },
+              { name: "Bicycle Crunch", sets: "3", reps: "30 each side", note: "" },
+              { name: "Russian Twist (heavy)", sets: "3", reps: "20", note: "Heavy plate or medicine ball" },
+              { name: "Mountain Climbers", sets: "3", reps: "60 sec", note: "Full minute, fast pace" },
+              { name: "Dragon Flag (Negative) 🐉", sets: "3", reps: "5", note: "Double frequency — also on Mondays now" },
+            ]}
+          ]
+        },
+        {
+          day: "Saturday", tag: "Long Run", icon: "🏅",
+          blocks: [{ title: "Long Run — Peak", type: "run", exercises: [
+            { name: "Week 9–10: Easy long run", sets: "", reps: "80–90 min", note: "Peak long run — do not go longer." },
+            { name: "Week 11: Taper run", sets: "", reps: "60 min", note: "Reduce volume — let the body consolidate." },
+          ]}]
+        },
+        {
+          day: "Sunday", tag: "Rest", icon: "😴",
+          blocks: [{ title: "Rest / Active Recovery", type: "rest", exercises: [
+            { name: "Full rest, gentle walk or light stretching", sets: "", reps: "", note: "Sleep 7–9 hrs." }
+          ]}]
+        }
+      ]
+    }
+  ],
+  milestones: [
+    { week: 4, running: "Comfortable 50 min run", pullups: "5 controlled negatives", core: "60 sec plank" },
+    { week: 7, running: "75 min long run", pullups: "3–4 band-assisted reps", core: "10 hanging leg raises" },
+    { week: 10, running: "Race pace intervals", pullups: "6+ unassisted pull-ups", core: "Ab wheel from standing" },
+    { week: "🏁", running: "Sub-2hr half marathon", pullups: "10 pull-ups 💪", core: "Visible abs 🔥" },
+  ],
+  nutrition: [
+    { icon: "🥩", label: "Protein", value: "1.6–2g per kg/day (~140–180g)", detail: "Chicken, eggs, Greek yoghurt, fish, protein shakes" },
+    { icon: "🍚", label: "Carbs", value: "More on run days, less on rest days", detail: "Rice, oats, sweet potato — they fuel your runs" },
+    { icon: "⚖️", label: "Calorie Deficit", value: "~300–400 kcal/day", detail: "Your running creates most of this naturally" },
+    { icon: "💧", label: "Hydration", value: "3+ litres of water per day", detail: "Non-negotiable for performance and recovery" },
+  ],
+  rules: [
+    { icon: "😴", text: "Sleep 7–9 hours — this is when you get stronger and leaner" },
+    { icon: "🏅", text: "Never skip the long run — it's 70% of your half marathon training" },
+    { icon: "📈", text: "Progressive overload — add weight or a rep every 1–2 weeks on all exercises" },
+    { icon: "📅", text: "If only doing 3 sessions: drop Thursday run first, then Friday strength" },
+    { icon: "🚨", text: "Soreness is fine. Sharp pain is not — rest it immediately" },
+  ]
+};
+
+const TYPE_STYLE = {
+  physio: { bg: "rgba(139,92,246,0.12)", border: "#8B5CF6", dot: "#8B5CF6", label: "#C4B5FD" },
+  strength: { bg: "rgba(59,130,246,0.10)", border: "#3B82F6", dot: "#3B82F6", label: "#93C5FD" },
+  core: { bg: "rgba(16,185,129,0.12)", border: "#10B981", dot: "#10B981", label: "#6EE7B7" },
+  run: { bg: "rgba(245,158,11,0.12)", border: "#F59E0B", dot: "#F59E0B", label: "#FCD34D" },
+  rest: { bg: "rgba(100,100,120,0.08)", border: "#444", dot: "#555", label: "#888" },
+};
+
+function App() {
+  const [phase, setPhase] = useState(0);
+  const [openDay, setOpenDay] = useState(null);
+  const [tab, setTab] = useState("plan");
+  const p = PLAN.phases[phase];
+
+  return (
+    <div style={{ background: "#080810", minHeight: "100vh", paddingBottom: 40 }}>
+
+      {/* Top bar */}
+      <div className="safe-top" style={{ background: "#080810", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 0 #111" }}>
+        <div className="header-line" />
+        <div style={{ padding: "12px 16px 0" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <h1 className="barlow" style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.5px", lineHeight: 1 }}>
+              11-WEEK PLAN
+            </h1>
+            <span style={{ fontSize: 11, color: "#555", fontWeight: 500, letterSpacing: "0.3px" }}>MAY 12 → JUL 30</span>
+          </div>
+          <p style={{ fontSize: 11, color: "#444", marginTop: 2, marginBottom: 10, letterSpacing: "0.6px", textTransform: "uppercase", fontWeight: 600 }}>
+            Sub-2hr Half Marathon · 10 Pull-Ups · Visible Abs
+          </p>
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #151520" }}>
+            {["plan","milestones","nutrition","rules"].map(t => (
+              <button key={t} className="tab-btn" onClick={() => setTab(t)} style={{
+                background: "none", border: "none", padding: "8px 12px",
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase",
+                color: tab === t ? "#fff" : "#444",
+                borderBottom: tab === t ? `2px solid #00E5A0` : "2px solid transparent",
+                marginBottom: -1,
+              }}>{t}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "16px 14px 0", maxWidth: 640, margin: "0 auto" }}>
+
+        {/* PLAN TAB */}
+        {tab === "plan" && (
+          <div className="fade-in">
+            {/* Phase Pills */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              {PLAN.phases.map((ph, i) => (
+                <button key={ph.id} className="phase-btn" onClick={() => { setPhase(i); setOpenDay(null); }} style={{
+                  flex: 1, padding: "12px 8px", borderRadius: 10, textAlign: "left",
+                  border: `1.5px solid ${phase === i ? ph.color + "80" : "#1a1a28"}`,
+                  background: phase === i ? ph.color + "15" : "#0c0c18",
+                }}>
+                  <div className="barlow" style={{ fontSize: 22, fontWeight: 800, color: phase === i ? ph.color : "#333", lineHeight: 1 }}>{ph.label}</div>
+                  <div style={{ fontSize: 10, color: phase === i ? "#888" : "#2a2a38", marginTop: 2, fontWeight: 600, letterSpacing: "0.3px" }}>{ph.weeks}</div>
+                  <div className="barlow" style={{ fontSize: 12, color: phase === i ? ph.color : "#2a2a38", marginTop: 1, fontWeight: 700 }}>{ph.subtitle.toUpperCase()}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Phase banner */}
+            <div style={{
+              background: p.color + "0e", border: `1px solid ${p.color}25`, borderRadius: 10,
+              padding: "12px 14px", marginBottom: 14, display: "flex", gap: 10, alignItems: "center"
+            }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
+              <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5, flex: 1 }}>{p.description}</p>
+              <span style={{
+                background: p.color + "20", color: p.color, padding: "4px 9px",
+                borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: "0.3px", flexShrink: 0
+              }}>{p.badge}</span>
+            </div>
+
+            {/* Days */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {p.days.map((d, di) => {
+                const isOpen = openDay === di;
+                const isRest = d.tag === "Rest";
+                return (
+                  <div key={d.day} className="day-card" style={{
+                    background: "#0c0c18",
+                    border: `1px solid ${isOpen ? p.color + "50" : "#161622"}`,
+                    borderRadius: 10, overflow: "hidden",
+                  }}>
+                    <div onClick={() => !isRest && setOpenDay(isOpen ? null : di)}
+                      style={{ display: "flex", alignItems: "center", padding: "13px 14px", gap: 12, cursor: isRest ? "default" : "pointer" }}>
+                      <span style={{ fontSize: 20, width: 26, textAlign: "center", flexShrink: 0 }}>{d.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                          <span className="barlow" style={{ fontSize: 17, fontWeight: 800, color: isOpen ? p.color : "#bbb", letterSpacing: "0.5px" }}>{d.day.toUpperCase()}</span>
+                          {d.physio && <span style={{ background: "#8B5CF615", color: "#C4B5FD", padding: "2px 7px", borderRadius: 20, fontSize: 9, fontWeight: 700, letterSpacing: "0.3px" }}>PHYSIO</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#555", marginTop: 1, fontWeight: 500 }}>{d.tag}</div>
+                      </div>
+                      {!isRest && <span style={{ color: "#333", fontSize: 12 }}>{isOpen ? "▲" : "▼"}</span>}
+                    </div>
+
+                    {isOpen && (
+                      <div className="fade-in" style={{ padding: "0 12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+                        {d.blocks.map((block, bi) => {
+                          const ts = TYPE_STYLE[block.type] || TYPE_STYLE.strength;
+                          return (
+                            <div key={bi} style={{ background: ts.bg, border: `1px solid ${ts.border}25`, borderRadius: 8, overflow: "hidden" }}>
+                              <div style={{ padding: "8px 12px", borderBottom: `1px solid ${ts.border}18`, display: "flex", alignItems: "center", gap: 7 }}>
+                                <span style={{ width: 6, height: 6, borderRadius: "50%", background: ts.dot, display: "inline-block", flexShrink: 0 }} />
+                                <span style={{ fontSize: 10, fontWeight: 700, color: ts.label, letterSpacing: "0.7px", textTransform: "uppercase" }}>{block.title}</span>
+                              </div>
+                              {block.exercises.map((ex, ei) => (
+                                <div key={ei} style={{
+                                  padding: "9px 12px",
+                                  borderBottom: ei < block.exercises.length - 1 ? `1px solid ${ts.border}12` : "none",
+                                  display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6, alignItems: "start"
+                                }}>
+                                  <div>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: "#d0d0e0" }}>{ex.name}</div>
+                                    {ex.note && <div style={{ fontSize: 11, color: "#555", marginTop: 2, lineHeight: 1.4 }}>{ex.note}</div>}
+                                  </div>
+                                  <div style={{ textAlign: "center", minWidth: 30 }}>
+                                    {ex.sets && <>
+                                      <div style={{ fontSize: 9, color: "#444", fontWeight: 700, letterSpacing: "0.5px" }}>SETS</div>
+                                      <div style={{ fontSize: 14, fontWeight: 700, color: ts.label }}>{ex.sets}</div>
+                                    </>}
+                                  </div>
+                                  <div style={{ textAlign: "center", minWidth: 48 }}>
+                                    {ex.reps && <>
+                                      <div style={{ fontSize: 9, color: "#444", fontWeight: 700, letterSpacing: "0.5px" }}>REPS</div>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: ts.label }}>{ex.reps}</div>
+                                    </>}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* MILESTONES TAB */}
+        {tab === "milestones" && (
+          <div className="fade-in">
+            <h2 className="barlow" style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 16 }}>PROGRESS MILESTONES</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {PLAN.milestones.map((m, i) => (
+                <div key={i} style={{ background: "#0c0c18", border: `1px solid ${i === 3 ? "#FF2D5530" : "#161622"}`, borderRadius: 10, padding: "16px 14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
+                      background: i === 3 ? "#FF2D5520" : "#111120",
+                      border: `2px solid ${i === 3 ? "#FF2D55" : "#222"}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <span className="barlow" style={{ fontSize: 14, fontWeight: 800, color: i === 3 ? "#FF2D55" : "#666" }}>
+                        {i === 3 ? "🏁" : `W${m.week}`}
+                      </span>
+                    </div>
+                    <span className="barlow" style={{ fontSize: 15, fontWeight: 700, color: i === 3 ? "#FF2D55" : "#888" }}>
+                      {i === 3 ? "GOAL DATE — JULY 30TH" : `END OF WEEK ${m.week}`}
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                    {[["🏃 Running", m.running, "#F59E0B"], ["🔝 Pull-Ups", m.pullups, "#3B82F6"], ["💪 Core", m.core, "#10B981"]].map(([lbl, val, col]) => (
+                      <div key={lbl} style={{ background: col + "12", border: `1px solid ${col}25`, borderRadius: 8, padding: "9px 10px" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: col, letterSpacing: "0.4px", marginBottom: 5 }}>{lbl}</div>
+                        <div style={{ fontSize: 11, color: "#bbb", fontWeight: 500, lineHeight: 1.4 }}>{val}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* NUTRITION TAB */}
+        {tab === "nutrition" && (
+          <div className="fade-in">
+            <h2 className="barlow" style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 6 }}>NUTRITION GUIDE</h2>
+            <p style={{ fontSize: 12, color: "#555", marginBottom: 18 }}>The hidden lever. Training alone won't create visible abs.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              {PLAN.nutrition.map((n, i) => (
+                <div key={i} style={{ background: "#0c0c18", border: "1px solid #161622", borderRadius: 10, padding: "16px 14px", display: "flex", gap: 12 }}>
+                  <span style={{ fontSize: 24, flexShrink: 0 }}>{n.icon}</span>
+                  <div>
+                    <div className="barlow" style={{ fontSize: 15, fontWeight: 700, color: "#00E5A0", marginBottom: 3 }}>{n.label.toUpperCase()}</div>
+                    <div style={{ fontSize: 13, color: "#ccc", fontWeight: 500, marginBottom: 3 }}>{n.value}</div>
+                    <div style={{ fontSize: 11, color: "#555" }}>{n.detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* RULES TAB */}
+        {tab === "rules" && (
+          <div className="fade-in">
+            <h2 className="barlow" style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 6 }}>NON-NEGOTIABLES</h2>
+            <p style={{ fontSize: 12, color: "#555", marginBottom: 18 }}>Five rules that override everything else.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              {PLAN.rules.map((r, i) => (
+                <div key={i} style={{ background: "#0c0c18", border: "1px solid #161622", borderRadius: 10, padding: "16px 14px", display: "flex", gap: 12, alignItems: "center" }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: "50%", background: "#FF2D5512", border: "1.5px solid #FF2D5530",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16
+                  }}>{r.icon}</div>
+                  <p style={{ fontSize: 13, color: "#bbb", lineHeight: 1.5 }}>{r.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
